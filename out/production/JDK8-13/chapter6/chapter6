@@ -1,0 +1,61 @@
+ParallelStream采用fork/join的框架提供了并发执行能力;
+底层原理
+    线程池(ForkJoinPool)维护一个线程队列;
+    可以分割任务,将父任务分成子任务,完全贴合分治思想
+问题
+    parallelStream 并行是否一定比Stream串行快;
+        错误,数据量少的情况,可能串行更快,ForkJoin会耗性能
+    多数情况下并行比串行块,是否可以都用并行;
+        不行,部分情况下会有线程安全问题,parallelStream里面使用的外部变量,比如集合一定要使用线程安全集合.
+        List<Integer> numbers = Arrays.asList(1,2,3,4,5,6,7,8,9);
+        numbers.parallelStream().forEach(System.out::println);
+        for (int i = 0; i <100000 ; i++) {
+            List list = new CopyOnWriteArrayList();
+            IntStream.range(0,100).parallel().forEach(list::add);
+            System.out.println(i+" - "+list.size());
+        }
+
+    public boolean add(E e) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            Object[] elements = getArray();
+            int len = elements.length;
+            Object[] newElements = Arrays.copyOf(elements, len + 1);
+            newElements[len] = e;
+            setArray(newElements);
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+Reduce操作
+    聚合操作
+    根据一定的规则将Stream中的元素进行计算后返回一个唯一的值
+    常用方法一
+        Optional<T> reduce(BinaryOperator<T> accumulator);
+        accumulator计算的累加器;
+
+        int value = Stream.of(1, 2, 3, 4, 5).reduce(new BinaryOperator<Integer>() {
+                @Override
+                public Integer apply(Integer integer, Integer integer2) {
+                    return integer + integer2;
+                }
+        }).get();
+
+
+    常用方法二
+        T reduce(T identity,BinaryOperator<T> accumulator);
+        identity 用户提供一个循环计算的初始值;
+        accumulator 计算的累加器
+
+        Stream.of(1,2,3,4,5).reduce(10,(sum,item)->sum+item);
+
+便利方式
+    for循环;
+    迭代器Iterator
+
+    注意:
+        不能修改包含外部变量的值
+        不能使用break或return结束循环,continue跳过循环.

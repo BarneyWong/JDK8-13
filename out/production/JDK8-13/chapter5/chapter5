@@ -1,0 +1,79 @@
+Stream
+    通过集合转换为这么一种叫做"流"的元素队列,通过声明性方式,能够对集合中的每个每个元素进行一系列并行或串行的流水线操作.
+    元素是特定类型的对象,所以元素集合看作一种流,流在管道中传输,且可以在管道的节点上进行处理,比如排序,聚合,过滤等操作
+
+    数据元素集合-->生成流-->中间操作-->终端操作
+
+    操作详情
+        数据元素便是原始集合,如List,Set,Map等;
+        生成流,可以是串行流stream()或者并行流parallelStream()
+        中间操作,可以是排序,聚合,过滤,转换等;
+        终端操作,很多流操作本身就会返回一个流,所以多个操作可以直接连接起来,最后统一进行收集
+
+    map函数
+        <R> Stream<R> map(Function<? super T, ? extends R> mapper);
+        将流中的每个元素T映射为R
+        List<String> list = Arrays.asList("aaa","bbb","ccc","ddd");
+        List<String> results = list.stream().map(obj->"BarneyWong "+obj).collect(Collectors.toList());
+        System.out.println(results.toString());
+
+        List<User> userList = Arrays.asList(new User(1,"a","123"),
+                new User(2,"a","123"),new User(3,"a","123"),
+                new User(4,"a","123"),new User(5,"a","123"),
+                new User(6,"a","123"));
+
+        List<UserDTO> userDTOList =userList.stream().map(obj->{
+            UserDTO userDTO= new UserDTO(obj.getId(),obj.getName());
+            return userDTO;
+        }).collect(Collectors.toList());
+
+        System.out.println(userDTOList);
+
+    filter函数
+        Stream<T> filter(Predicate<? super T> predicate);
+        通过设置的条件过滤出元素;
+
+         List<String> stringList = Arrays.asList("SpringBoot","SpringCloud","redis","git","netty","Java","html","docker");
+         List<String> resultList = stringList.stream().filter(obj->obj.length()>5).collect(Collectors.toList());
+         System.out.println(resultList);
+
+    Sorted函数
+         sorted()对流进行自然排序,其中的元素必须实现Comparable接口
+         Stream<T> sorted();
+         自定义排序
+         Stream<T> sorted(Comparator<? super T> comparator);
+
+         List<String> stringList = Arrays.asList("SpringBoot", "SpringCloud", "Redis", "Git", "Netty", "Java", "Html", "Docker","git");
+         List<String> resultList = stringList.stream().filter(obj -> obj.length() > 5).collect(Collectors.toList());
+         List<String> sortedList = stringList.stream().sorted().collect(Collectors.toList());
+         List<String> sortedList2 = stringList.stream().sorted(Comparator.comparing(obj->obj.length())).collect(Collectors.toList());
+         List<String> sortedList3 = stringList.stream().sorted(Comparator.comparing(String::length,Comparator.reverseOrder())).collect(Collectors.toList());
+
+    limit函数
+        截断流使其最多只包含指定数量的元素
+        List<String> sortedList = stringList.stream().sorted(Comparator.comparing(String::length,Comparator.reverseOrder())).limit(3).collect(Collectors.toList());
+
+    allMatch函数
+        boolean allMatch(Predicate<? super T> predicate);
+        检查食肉匹配所有的元素,只有全部符合才返回True
+        Boolean result = stringList.stream().allMatch(obj -> obj.length() > 1);
+
+    anyMatch函数
+        boolean anyMatch(Predicate<? super T> predicate);
+        至少匹配一个元素
+        Boolean result2 = stringList.stream().anyMatch(obj -> obj.length() > 6);
+
+    max函数
+        Optional<T> max(Comparator<? super T> comparator);
+
+        List<Student> studentList = Arrays.asList(new Student(22), new Student(24), new Student(25), new Student(26));
+        Optional<Student> max =studentList.stream().max(Comparator.comparing(Student::getAge));
+        Student student = max.get();
+        System.out.println(student);
+    min函数
+        Optional<T> min(Comparator<? super T> comparator);
+
+         List<Student> studentList = Arrays.asList(new Student(22), new Student(24), new Student(25), new Student(26));
+         Optional<Student> min =studentList.stream().min(Comparator.comparing(Student::getAge));
+         Student studentMin = min.get();
+         ystem.out.println(studentMin);

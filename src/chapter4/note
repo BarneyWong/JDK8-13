@@ -1,0 +1,29 @@
+Java 8 内置的四大核心函数式接口
+Consumer<T> :消费型接口，有入参，无返回值；
+    void accept(T t);
+Supplier<T> :供给型接口，无入参，有返回值；
+    T get();
+    用途：泛型一定和方法的返回值类型是一种类型，如果需要获得一个数据，并且不需要传入参数，可以使用Supplier接口，例如：无参的工厂方法，即设计模式创建对象，简单来说就是提供者。
+Function<T,R> ：函数型接口，有入参，有返回值；
+    R apply(T t);
+    将转换逻辑提取出来，解耦合。
+BiFunction<T,U,R>
+    R apply(T t,U u);
+Predicate<T> ：断言型接口，有入参，有返回值，返回值是boolean类型；
+    boolean test(T t);
+
+
+方法和构造函数引用
+    用来直接访问类或者实例已经存在的方法或构造方法
+    通过方法引用，可以将方法的引用赋值给一个变量
+    语法：容器（类名，实例名）:: 相应的方法名
+    静态方法，ClassName::methodName,
+    实例方法，Instance::methodName,
+    构造函数，ClassName::new
+
+    单个参数
+    Function<入参1，返回类型> func = 方法引用
+    应用 func.apply(入参1);
+    2个参数
+    BiFunction<入参1,入参2,返回类型> func = 方法引用
+    应用 func.apply(入参1,入参2);

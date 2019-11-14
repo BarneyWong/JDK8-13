@@ -1,0 +1,122 @@
+Collector收集器
+    collect()方法
+        一个终端操作,用于对流中的数据进行归集操作,collect方法接受的参数是一个Collector
+        有两个重载方法
+            <R> R collect(Supplier<R> supplier,BiConsumer<R,? super T > accumulator, BiConsumer<R,R> combiner);
+            <R,A> collect(Collector<? super T,A,R> collector)
+        Collector的作用
+            收集器,也是一个接口,它的工具类Collectors提供很多工厂方法.
+        Collectors 工具类,提供了很多常见的收集器实现
+            Collectors.toList()
+                 public static <T> Collector<T, ?, List<T>> toList() {
+                        return new CollectorImpl<>((Supplier<List<T>>) ArrayList::new, List::add,
+                                                   (left, right) -> { left.addAll(right); return left; },
+                                                   CH_ID);
+                    }
+                 ArrayList::new 创建一个ArrayList作为累加器;
+                 List::add对流中元素的操作就是直接添加到累加器中
+                 reduce操作,对子任务归集结果addAll,后一个子任务的结果直接全部添加到前一个子任务结果中
+                 CH_ID是一个unmodifiableSet集合
+
+
+                 List<String> list = Arrays.asList("dkjiaf", "dfiandfio", "difjsfios");
+                 //        List<String> result = list.stream().collect(Collectors.toCollection(LinkedList::new));
+                 //        List<String> result = list.stream().collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+                 Set<String> result = list.stream().collect(Collectors.toCollection(TreeSet::new));
+
+            Collectors.toMap();
+            Collectors.toSet();
+            Collectors.toCollection(LinkedList::new)
+            Collectors.toCollection(CopyOnWriteArrayList::new)
+            Collectors.toCollection(TreeSet::new)
+
+    joining函数
+        拼接函数Collectors.joining
+            Collectors.joining()
+            Collectors.joining("param")
+            Collectors.joining("param1","param2","parma3")
+            源码实现
+                 public static Collector<CharSequence, ?, String> joining() {
+                    return new CollectorImpl<CharSequence, StringBuilder, String>(
+                            StringBuilder::new, StringBuilder::append,
+                            (r1, r2) -> { r1.append(r2); return r1; },
+                            StringBuilder::toString, CH_NOID);
+                    }
+
+                 public static Collector<CharSequence, ?, String> joining(CharSequence delimiter) {
+                        return joining(delimiter, "", "");
+                    }
+
+                  public static Collector<CharSequence, ?, String> joining(CharSequence delimiter,
+                                                                              CharSequence prefix,
+                                                                              CharSequence suffix) {
+                         return new CollectorImpl<>(
+                                 () -> new StringJoiner(delimiter, prefix, suffix),
+                                 StringJoiner::add, StringJoiner::merge,
+                                 StringJoiner::toString, CH_NOID);
+                     }
+
+
+            该方法可以将Stream得到一个字符串,joining函数接受三个参数,分别表示元素之间的连接符,前缀和后缀
+
+
+    PartitioningBy分组
+         public static <T> Collector<T, ?, Map<Boolean, List<T>>> partitioningBy(Predicate<? super T> predicate) {
+                return partitioningBy(predicate, toList());
+            }
+
+         List<String> stringList = Arrays.asList("SpringBoot","Java","HTML5","CSS3");
+         Map<Boolean,List<String>> resultMap = stringList.stream().collect(Collectors.partitioningBy(obj->obj.length()>4));
+         resultMap.forEach((a,b)-> System.out.println(a+":"+b));
+
+    groupingBy()分组
+        public static <T, K> Collector<T, ?, Map<K, List<T>>>
+            groupingBy(Function<? super T, ? extends K> classifier) {
+                return groupingBy(classifier, toList());
+            }
+
+        List<Student> studentList = Arrays.asList(
+                        new Student("山东",21),new Student("广东",21),new Student("陕西",21),
+                        new Student("山东",22),new Student("广东",22),new Student("陕西",22),
+                        new Student("山东",23),new Student("广东",23),new Student("陕西",23));
+        Map<String,List<Student >> stringListMap = studentList.stream().collect(Collectors.groupingBy(obj->obj.getProvince()));
+
+        stringListMap.forEach((a,b)-> System.out.println(a+ " : "+b));
+
+    groupingBy()进阶
+        分组统计
+            聚合函数进行统计查询,分组后统计个数
+            Collectors.counting()统计元素个数
+            public static <T, K, A, D> Collector<T, ?, Map<K, D>> groupingBy(Function<? super T, ? extends K> classifier,
+                                                      Collector<? super T, A, D> downstream) {
+                    return groupingBy(classifier, HashMap::new, downstream);
+            }
+        List<Student> studentList = Arrays.asList(
+                        new Student("山东",21),new Student("广东",21),new Student("陕西",21),
+                        new Student("山东",22),new Student("广东",22),new Student("陕西",22),
+                        new Student("山东",23),new Student("广东",23),new Student("陕西",23));
+        Map<String,Long> map= studentList.stream().collect(Collectors.groupingBy(obj->obj.getProvince(),Collectors.counting()));
+        map.forEach((key,value)-> System.out.println(key+":"+value));
+
+    summarizing集合统计
+       public static <T>
+           Collector<T, ?, IntSummaryStatistics> summarizingInt(ToIntFunction<? super T> mapper) {
+               return new CollectorImpl<T, IntSummaryStatistics, IntSummaryStatistics>(
+                       IntSummaryStatistics::new,
+                       (r, t) -> r.accept(mapper.applyAsInt(t)),
+                       (l, r) -> { l.combine(r); return l; }, CH_ID);
+           }
+
+       作用:可以一个方法把统计相关的基本上都完成
+       分类:
+            summarizingInt
+            summarizingLong
+            summarizingDouble
+
+             }
+       List<Student> studentList = Arrays.asList(
+                        new Student("山东",21),new Student("广东",21),new Student("陕西",21),
+                        new Student("山东",22),new Student("广东",22),new Student("陕西",22),
+                        new Student("山东",23),new Student("广东",23),new Student("陕西",23));
+       IntSummaryStatistics intSummaryStatistics =  studentList.stream().collect(Collectors.summarizingInt(Student::getAge));
+       System.out.println(intSummaryStatistics.toString());
