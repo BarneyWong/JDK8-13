@@ -1,0 +1,35 @@
+    JVM内存知识：
+        在JDK8之前的HotSpot JVM，有个区域叫做“永久代”(permanent generation)，通过在命令行设置参数 -XX:MaxPermSize
+     来设定永久代的最大可分配的内存空间
+        如果JDK8里设置了PermSize和MaxPermSize会被忽略并给出警告。
+    作用：
+        该内存主要是被JVM用来存放class和mate信息的，当class被加载loader的时候就会被存储到该内存区域。
+    如方法的编译信息及字节码、常量池和符号解析、类的层级信息，字段，名字等。
+
+    异常：java.lang.OutOfMemoryError:PermGen space
+        原因：永久代空间不足，类太多。
+
+    JDK8的修改
+        JDK8HotSpot JVM 使用本地内存来存储类元数据信息，叫做元空间(Metaspace）
+        默认情况MetaSpace的大小只与本地内存大小相关。
+        常用的两个参数
+        -XX:MetaspaceSize=N
+        -XX:MaxMetaspaceSize=N
+    查看大小
+        jstat -pc <PID>
+
+
+try-with-resources
+    在try(...）里声明的资源，会在try-catch代码块结束后自动关闭掉
+
+字节流
+    InputStream
+        ByteArrayInputStream
+        PipedInputStream
+        FilterInputStream
+            BufferedInputStream
+            DataInputStream
+        FileInputStream
+        ObjectInputStream
+    OutputStream
+        ByteArrayOutputStream
